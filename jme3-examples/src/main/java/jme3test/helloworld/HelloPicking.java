@@ -44,6 +44,8 @@ import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
@@ -68,6 +70,8 @@ public class HelloPicking extends SimpleApplication {
     initCrossHairs(); // a "+" in the middle of the screen to help aiming
     initKeys();       // load custom key mappings
     initMark();       // a red sphere to mark the hit
+    
+    flyCam.setMoveSpeed(10f);
 
     /** create four colored boxes and a floor to shoot at: */
     shootables = new Node("Shootables");
@@ -78,6 +82,7 @@ public class HelloPicking extends SimpleApplication {
     shootables.attachChild(makeCube("the Deputy", 1f, 0f, -4f));
     shootables.attachChild(makeFloor());
     shootables.attachChild(makeCharacter());
+    shootables.attachChild(makeColumn(3f, 1f, -2f));    
   }
 
   /** Declaring the "Shoot" action and mapping to its triggers. */
@@ -178,4 +183,41 @@ public class HelloPicking extends SimpleApplication {
     golem.addLight(sun);
     return golem;
   }
+  
+    protected Spatial makeColumn(float x, float y, float z) {
+        Node bigColumn = new Node("BigCol");
+        bigColumn.setLocalTranslation(x, y, z);
+        Vector3f translate = new Vector3f(1.5f, 0, 0);
+        Quaternion roll60 = new Quaternion(); 
+        roll60.fromAngleAxis( FastMath.PI/3 , new Vector3f(0,1,0) );
+        
+        for (int i=0; i<6; i++)
+        {
+          Node smallColumn = new Node("SmallCol"+i);
+
+          float boxSize = 0.5f;
+          float h = 0;
+          float scale = 1f;
+          for (int j=0; j<5; j++)
+          {
+            boxSize *= scale;
+            Box box = new Box(boxSize, boxSize, boxSize);
+            Geometry cube = new Geometry("box"+(10*i+j), box);
+            Material mat1 = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+            mat1.setColor("Color", ColorRGBA.randomColor());
+            cube.setMaterial(mat1);
+            cube.move(translate/*.mult(scale)*/);
+            cube.move(0,h,0); h += 2*boxSize;
+            cube.rotate(0, FastMath.DEG_TO_RAD*i*60f, 0);
+  
+            scale *= 0.9f;
+            smallColumn.attachChild(cube);
+          }
+          bigColumn.attachChild(smallColumn);
+
+          //rotate about the Y-Axis by 60deg
+          translate = roll60.mult(translate);
+        }
+        return bigColumn;
+    }
 }

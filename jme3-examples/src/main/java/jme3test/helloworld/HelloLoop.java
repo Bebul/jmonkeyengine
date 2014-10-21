@@ -66,6 +66,7 @@ public class HelloLoop extends SimpleApplication {
     @Override
     public void simpleUpdate(float tpf) {
         // make the player rotate:
-        player.rotate(0, 2*tpf, 0); 
+        player.rotate(-2*tpf, tpf, 0.3f*tpf); 
+        player.move(0,0,200*tpf);
     }
 }

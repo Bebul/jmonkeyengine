@@ -38,6 +38,7 @@ import com.jme3.collision.CollisionResults;
 import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
@@ -71,6 +72,7 @@ public class TestMousePick extends SimpleApplication {
         shootables.attachChild(makeCube("the Deputy", 1f, 0f, -4f));
         shootables.attachChild(makeFloor());
         shootables.attachChild(makeCharacter());
+        shootables.attachChild(makeColumn(0f, 5f, 5f));
     }
 
     @Override
@@ -150,4 +152,25 @@ public class TestMousePick extends SimpleApplication {
         golem.addLight(sun);
         return golem;
     }
+
+    protected Spatial makeColumn(float x, float y, float z) {
+        Node bigColumn = new Node("BigCol");
+        Vector3f translate = new Vector3f(1.5f, 0, 0);
+        Quaternion roll60 = new Quaternion(); 
+        roll60.fromAngleAxis( FastMath.PI/3 , new Vector3f(0,1,0) );
+        for (int i=0; i<6; i++)
+        {
+          Box box = new Box(0.5f, 0.5f, 0.5f);
+          Geometry cube = new Geometry("box"+i, box);
+          Material mat1 = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+          mat1.setColor("Color", ColorRGBA.randomColor());
+          cube.setMaterial(mat1);
+          cube.move(translate);
+          bigColumn.attachChild(cube);
+          //rotate about the Y-Axis by 60deg
+          translate = roll60.mult(translate);
+        }
+        return bigColumn;
+    }
+    
 }

@@ -37,6 +37,7 @@ import com.jme3.asset.plugins.ZipLocator;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.util.CollisionShapeFactory;
@@ -79,6 +80,7 @@ public class HelloCollision extends SimpleApplication
     /** Set up Physics */
     bulletAppState = new BulletAppState();
     stateManager.attach(bulletAppState);
+    // Make colision shapes visible
     //bulletAppState.getPhysicsSpace().enableDebug(assetManager);
 
     // We re-use the flyby camera for rotation, while positioning is handled by physics

@@ -41,9 +41,11 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.DirectionalLight;
+import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
+import com.jme3.scene.debug.SkeletonDebugger;
 
 /** Sample 7 - how to load an OgreXML model and play an animation, 
  * using channels, a controller, and an AnimEventListener. */
@@ -70,23 +72,34 @@ public class HelloAnimation extends SimpleApplication
     rootNode.addLight(dl);
 
     /** Load a model that contains animation */
-    player = (Node) assetManager.loadModel("Models/Oto/Oto.mesh.xml");
-    player.setLocalScale(0.5f);
+    player = (Node) assetManager.loadModel("Models/Ninja/Ninja.mesh.xml");
+    player.setLocalScale(0.03f);
     rootNode.attachChild(player);
 
     /** Create a controller and channels. */
     control = player.getControl(AnimControl.class);
     control.addListener(this);
     channel = control.createChannel();
-    channel.setAnim("stand");
+    channel.setAnim("Walk");
+
+    for (String anim : control.getAnimationNames()) { System.out.println(anim); }    
+
+    // make the skeleton visible
+    SkeletonDebugger skeletonDebug = 
+        new SkeletonDebugger("skeleton", control.getSkeleton());
+    Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+    mat.setColor("Color", new ColorRGBA(0xcc/255.0f,0x33/255.0f,0,0));
+    mat.getAdditionalRenderState().setDepthTest(false);
+    skeletonDebug.setMaterial(mat);
+    player.attachChild(skeletonDebug);    
   }
 
   /** Use this listener to trigger something after an animation is done. */
   public void onAnimCycleDone(AnimControl control, AnimChannel channel, String animName) {
-    if (animName.equals("Walk")) {
+    if (animName.equals("Backflip")) {
       /** After "walk", reset to "stand". */
-      channel.setAnim("stand", 0.50f);
-      channel.setLoopMode(LoopMode.DontLoop);
+      channel.setAnim("Walk", 0.50f);
+      channel.setLoopMode(LoopMode.Loop);
       channel.setSpeed(1f);
     }
   }
@@ -98,17 +111,17 @@ public class HelloAnimation extends SimpleApplication
 
   /** Custom Keybindings: Mapping a named action to a key input. */
   private void initKeys() {
-    inputManager.addMapping("Walk", new KeyTrigger(KeyInput.KEY_SPACE));
-    inputManager.addListener(actionListener, "Walk");
+    inputManager.addMapping("Backflip", new KeyTrigger(KeyInput.KEY_SPACE));
+    inputManager.addListener(actionListener, "Backflip");
   }
 
   /** Definining the named action that can be triggered by key inputs. */
   private ActionListener actionListener = new ActionListener() {
     public void onAction(String name, boolean keyPressed, float tpf) {
-      if (name.equals("Walk") && !keyPressed) {
-        if (!channel.getAnimationName().equals("Walk")) {
+      if (name.equals("Backflip") && !keyPressed) {
+        if (!channel.getAnimationName().equals("Backflip")) {
           /** Play the "walk" animation! */
-          channel.setAnim("Walk", 0.50f);
+          channel.setAnim("Backflip", 0.50f);
           channel.setLoopMode(LoopMode.Loop);
         }
       }
