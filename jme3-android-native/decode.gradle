@@ -40,7 +40,7 @@ task copyTremorFiles(type: Copy) {
         include '*.c'
         include '*.h'
     }
-    
+
     into outputDir
 }
 
@@ -65,7 +65,7 @@ task copySourceToBuild(type: Copy, dependsOn:[copyTremorFiles, copyStbiFiles, ge
 task buildNativeLib(type: Exec, dependsOn: copySourceToBuild) {
     workingDir decodeBuildDir
     executable rootProject.ndkCommandPath
-    args '-j8'
+    args "-j" + Runtime.runtime.availableProcessors()
 }
 
 task updatePreCompiledLibs(type: Copy, dependsOn: buildNativeLib) {
@@ -85,7 +85,7 @@ task copyPreCompiledLibs(type: Copy) {
     into outputDir
 }
 
-if (rootProject.ndkExists) {
+if (rootProject.ndkExists && rootProject.buildNativeProjects) {
     // build native libs and update stored pre-compiled libs to commit
     compileJava.dependsOn { updatePreCompiledLibs }
 } else {
