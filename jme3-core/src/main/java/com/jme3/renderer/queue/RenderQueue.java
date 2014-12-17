@@ -36,6 +36,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import java.util.ArrayList;
 
 /**
  * <code>RenderQueue</code> is used to queue up and sort 
@@ -52,6 +53,7 @@ public class RenderQueue {
     private GeometryList skyList;
     private GeometryList shadowRecv;
     private GeometryList shadowCast;
+    public ArrayList<Spatial> shadowCastAdepts;
 
     /**
      * Creates a new RenderQueue, the default {@link GeometryComparator comparators}
@@ -65,6 +67,7 @@ public class RenderQueue {
         this.skyList = new GeometryList(new NullComparator());
         this.shadowRecv = new GeometryList(new OpaqueComparator());
         this.shadowCast = new GeometryList(new OpaqueComparator());
+        this.shadowCastAdepts = new ArrayList<Spatial>();
     }
 
     /**
@@ -262,6 +265,15 @@ public class RenderQueue {
                 throw new UnsupportedOperationException("Unrecognized shadow bucket type: " + shadBucket);
         }
     }
+    /**
+     * Adds Spatial (Node or Geometry) into the shadowCastAdepts list
+     * shadowCastAdepts is used to optimize shadow rendering, by making 
+     * the frustum intersection test in ShadowUtil.updateShadowCamera 
+     * for the whole Node instead of for all geometries one by one.
+     */
+    public void addShadowCastAdept(Spatial n) {
+      shadowCastAdepts.add(n);
+    }
 
     /**
      * Adds a geometry to the given bucket.
@@ -396,5 +408,6 @@ public class RenderQueue {
         skyList.clear();
         shadowCast.clear();
         shadowRecv.clear();
+        shadowCastAdepts.clear();
     }
 }

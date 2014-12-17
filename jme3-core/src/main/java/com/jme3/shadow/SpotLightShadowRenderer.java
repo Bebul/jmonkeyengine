@@ -44,8 +44,10 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.queue.GeometryList;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.util.TempVars;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * SpotLightShadowRenderer renderer use Parrallel Split Shadow Mapping technique
@@ -141,7 +143,7 @@ public class SpotLightShadowRenderer extends AbstractShadowRenderer {
     }
 
     @Override
-    protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
+    protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders, ArrayList<Spatial> occAdepts) {
         ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCam, shadowMapOccluders);
         return shadowMapOccluders;
     }

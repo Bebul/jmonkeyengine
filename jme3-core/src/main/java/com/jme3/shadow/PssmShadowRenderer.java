@@ -437,7 +437,7 @@ public class PssmShadowRenderer implements SceneProcessor {
             ShadowUtil.updateFrustumPoints(viewCam, splitsArray[i], splitsArray[i + 1], 1.0f, points);
 
             //Updating shadow cam with curent split frustra
-            ShadowUtil.updateShadowCamera(occluders, receivers, shadowCam, points, splitOccluders, shadowMapSize);
+            ShadowUtil.updateShadowCamera(occluders, receivers, shadowCam, points, splitOccluders, shadowMapSize, rq.shadowCastAdepts);
 
             //saving light view projection matrix for this split            
             lightViewProjectionsMatrices[i].set(shadowCam.getViewProjectionMatrix());

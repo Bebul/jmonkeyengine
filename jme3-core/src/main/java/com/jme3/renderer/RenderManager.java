@@ -690,6 +690,7 @@ public class RenderManager {
         renderSubScene(scene, vp);
     }
     
+    public static boolean optimizeRenderShadow = false;
     // recursively renders the scene
     private void renderSubScene(Spatial scene, ViewPort vp) {
 
@@ -697,7 +698,8 @@ public class RenderManager {
         if (!scene.checkCulling(vp.getCamera())) {
             // move on to shadow-only render
             if ((scene.getShadowMode() != RenderQueue.ShadowMode.Off || scene instanceof Node) && scene.getCullHint() != Spatial.CullHint.Always) {
-                renderShadow(scene, vp.getQueue());
+              if ( optimizeRenderShadow ) vp.getQueue().addShadowCastAdept(scene); // no recursion, Node will be traversed later in updateShadowCamera
+              else renderShadow(scene, vp.getQueue());
             }
             return;
         }

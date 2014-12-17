@@ -363,7 +363,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, Savable 
      * @param shadowMapOcculders
      * @return
      */
-    protected abstract GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders);
+    protected abstract GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders, ArrayList<Spatial> occAdepts);
 
     /**
      * return the shadow camera to use for rendering the shadow map according
@@ -404,7 +404,7 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, Savable 
                 if (debugfrustums) {
                     doDisplayFrustumDebug(shadowMapIndex);
                 }
-                renderShadowMap(shadowMapIndex, occluders, sceneReceivers);
+                renderShadowMap(shadowMapIndex, occluders, sceneReceivers, rq.shadowCastAdepts);
 
             }
 
@@ -420,8 +420,8 @@ public abstract class AbstractShadowRenderer implements SceneProcessor, Savable 
         
     }
 
-    protected void renderShadowMap(int shadowMapIndex, GeometryList occluders, GeometryList receivers) {
-        shadowMapOccluders = getOccludersToRender(shadowMapIndex, occluders, receivers, shadowMapOccluders);
+    protected void renderShadowMap(int shadowMapIndex, GeometryList occluders, GeometryList receivers, ArrayList<Spatial> occAdepts) {
+        shadowMapOccluders = getOccludersToRender(shadowMapIndex, occluders, receivers, shadowMapOccluders, occAdepts);
         Camera shadowCam = getShadowCam(shadowMapIndex);
 
         //saving light view projection matrix for this split            
