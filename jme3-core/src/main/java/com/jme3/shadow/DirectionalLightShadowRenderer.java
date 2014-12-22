@@ -44,9 +44,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.queue.GeometryList;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import java.io.IOException;
-import java.util.ArrayList;
 
 /**
  * DirectionalLightShadowRenderer renderer use Parrallel Split Shadow Mapping
@@ -175,13 +173,15 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
     }
     
     @Override
-    protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders, ArrayList<Spatial> occAdepts) {
+    protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
 
         // update frustum points based on current camera and split
         ShadowUtil.updateFrustumPoints(viewPort.getCamera(), splitsArray[shadowMapIndex], splitsArray[shadowMapIndex + 1], 1.0f, points);
 
-        //Updating shadow cam with curent split frustra        
-        ShadowUtil.updateShadowCamera(sceneOccluders, sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0, occAdepts);
+        //Updating shadow cam with curent split frustra
+        ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
+        ShadowUtil.updateShadowCamera(sceneOccluders, sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
+        ShadowUtil.OccludersExtractor.rootScene = null;
 
         return shadowMapOccluders;
     }

@@ -686,6 +686,8 @@ public class RenderManager {
     public void renderScene(Spatial scene, ViewPort vp) {
         //reset of the camera plane state for proper culling (must be 0 for the first note of the scene to be rendered)
         vp.getCamera().setPlaneState(0);
+        //remember the scene for possible later use
+        vp.getQueue().setRootScene(scene);
         //rendering the scene
         renderSubScene(scene, vp);
     }
@@ -698,8 +700,7 @@ public class RenderManager {
         if (!scene.checkCulling(vp.getCamera())) {
             // move on to shadow-only render
             if ((scene.getShadowMode() != RenderQueue.ShadowMode.Off || scene instanceof Node) && scene.getCullHint() != Spatial.CullHint.Always) {
-              if ( optimizeRenderShadow ) vp.getQueue().addShadowCastAdept(scene); // no recursion, Node will be traversed later in updateShadowCamera
-              else renderShadow(scene, vp.getQueue());
+              if ( !optimizeRenderShadow ) renderShadow(scene, vp.getQueue());
             }
             return;
         }
