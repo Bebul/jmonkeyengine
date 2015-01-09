@@ -455,9 +455,8 @@ public class ShadowUtil {
                 }
  
                 if ( intersects ) {
-                    List<Spatial> children = ((Node)scene).getChildren();
-                    for (int i = 0; i < children.size(); i++) {
-                        addOccluders(children.get(i));
+                    for (Spatial child : ((Node)scene).getChildren()) {
+                        addOccluders(child);
                     }
                 }
             }
@@ -681,6 +680,48 @@ public class ShadowUtil {
 
     }
 
+    /**
+     * Populates the outputGeometryList with the geometries of the children 
+     * of OccludersExtractor.rootScene node that are in the frustum of the given camera
+     *
+     * @param camera the camera to check geometries against
+     * @param outputGeometryList the list of all geometries that are in the
+     * camera frustum
+     */    
+    public static void getGeometriesInCamFrustum(Camera camera, GeometryList outputGeometryList) {
+        if (OccludersExtractor.rootScene != null && OccludersExtractor.rootScene instanceof Node) {
+            int planeState = camera.getPlaneState();
+            addGeometriesInCamFrustumFromNode(camera, (Node)OccludersExtractor.rootScene, outputGeometryList);
+            camera.setPlaneState(planeState);
+        }
+    }
+    /**
+     * Helper function used to recursively populate the outputGeometryList 
+     * with geometry children of scene node
+     * 
+     * @param camera
+     * @param scene
+     * @param outputGeometryList 
+     */
+    private static void addGeometriesInCamFrustumFromNode(Camera camera, Node scene, GeometryList outputGeometryList) {
+        if (scene.getCullHint() == Spatial.CullHint.Always) return;
+        camera.setPlaneState(0);
+        if (camera.contains(scene.getWorldBound()) != Camera.FrustumIntersect.Outside) {
+            for (Spatial child: scene.getChildren()) {
+                if (child instanceof Node) addGeometriesInCamFrustumFromNode(camera, (Node)child, outputGeometryList);
+                else if (child instanceof Geometry && child.getCullHint() != Spatial.CullHint.Always) {
+                    RenderQueue.ShadowMode shadowMode = child.getShadowMode();
+                    camera.setPlaneState(0);
+                    if (shadowMode != RenderQueue.ShadowMode.Off && shadowMode != RenderQueue.ShadowMode.Receive && 
+                            !((Geometry)child).isGrouped() &&
+                            camera.contains(child.getWorldBound()) != Camera.FrustumIntersect.Outside) {
+                      outputGeometryList.add((Geometry)child);
+                    }
+                }
+            }
+        }
+    }
+    
     /**
      * Populates the outputGeometryList with the geometry of the
      * inputGeomtryList that are in the radius of a light.

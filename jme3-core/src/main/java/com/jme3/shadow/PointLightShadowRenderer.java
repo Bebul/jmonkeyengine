@@ -40,6 +40,7 @@ import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.GeometryList;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -130,7 +131,12 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
 
     @Override
     protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
-        ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCams[shadowMapIndex], shadowMapOccluders);
+        if (RenderManager.optimizeRenderShadow) {
+            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
+            ShadowUtil.getGeometriesInCamFrustum(shadowCams[shadowMapIndex], shadowMapOccluders);
+            ShadowUtil.OccludersExtractor.rootScene = null;            
+        }
+        else ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCams[shadowMapIndex], shadowMapOccluders);
         return shadowMapOccluders;
     }
 
