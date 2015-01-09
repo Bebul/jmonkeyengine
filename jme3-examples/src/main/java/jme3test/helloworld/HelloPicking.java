@@ -46,6 +46,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
+import com.jme3.light.PointLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -63,6 +64,7 @@ import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
+import com.jme3.shadow.PointLightShadowRenderer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
@@ -147,6 +149,7 @@ public class HelloPicking extends SimpleApplication {
     // We must add a light to make the model visible
     DirectionalLight sun = new DirectionalLight();
     sun.setDirection(new Vector3f(-1f, -1f, -1f));
+    sun.setColor(new ColorRGBA(0.5f, 0.5f, 0.5f, 1));
     rootNode.addLight(sun);
     
     Spatial sky = SkyFactory.createSky(assetManager, "Scenes/Beach/FullskiesSunset0068.dds", false);
@@ -161,6 +164,19 @@ public class HelloPicking extends SimpleApplication {
     dlsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
     //dlsr.displayDebug();
     viewPort.addProcessor(dlsr);
+    
+    PointLight lamp_light = new PointLight();
+    lamp_light.setColor(ColorRGBA.Yellow);
+    lamp_light.setRadius(20f);
+    lamp_light.setPosition(new Vector3f(210.0f, 0f, 210f));
+    //lamp_light.setPosition(new Vector3f(10.0f, 40f, 10f));
+    rootNode.addLight(lamp_light);
+    
+    PointLightShadowRenderer plsr = new PointLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
+    plsr.setLight(lamp_light);
+    plsr.setShadowIntensity(0.6f);
+    plsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+    viewPort.addProcessor(plsr);
   }
 
   /** Declaring the "Shoot" action and mapping to its triggers. */
