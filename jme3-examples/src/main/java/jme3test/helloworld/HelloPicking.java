@@ -46,7 +46,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
-import com.jme3.light.PointLight;
+import com.jme3.light.SpotLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -62,9 +62,10 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.shadow.CompareMode;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
-import com.jme3.shadow.PointLightShadowRenderer;
+import com.jme3.shadow.SpotLightShadowRenderer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
 import com.jme3.util.SkyFactory;
@@ -149,7 +150,7 @@ public class HelloPicking extends SimpleApplication {
     // We must add a light to make the model visible
     DirectionalLight sun = new DirectionalLight();
     sun.setDirection(new Vector3f(-1f, -1f, -1f));
-    sun.setColor(new ColorRGBA(0.5f, 0.5f, 0.5f, 1));
+    sun.setColor(ColorRGBA.White.mult(1.3f));
     rootNode.addLight(sun);
     
     Spatial sky = SkyFactory.createSky(assetManager, "Scenes/Beach/FullskiesSunset0068.dds", false);
@@ -163,8 +164,9 @@ public class HelloPicking extends SimpleApplication {
     dlsr.setShadowIntensity(0.6f);
     dlsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
     //dlsr.displayDebug();
-    viewPort.addProcessor(dlsr);
-    
+    //viewPort.addProcessor(dlsr);
+  
+ /*
     PointLight lamp_light = new PointLight();
     lamp_light.setColor(ColorRGBA.Yellow);
     lamp_light.setRadius(20f);
@@ -177,6 +179,21 @@ public class HelloPicking extends SimpleApplication {
     plsr.setShadowIntensity(0.6f);
     plsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
     viewPort.addProcessor(plsr);
+*/
+    SpotLight spot = new SpotLight();
+    spot.setSpotRange(200f);                           // distance
+    spot.setSpotInnerAngle(15f * FastMath.DEG_TO_RAD); // inner light cone (central beam)
+    spot.setSpotOuterAngle(35f * FastMath.DEG_TO_RAD); // outer light cone (edge of the light)
+    spot.setColor(ColorRGBA.White.mult(1.3f));         // light color
+    spot.setPosition(new Vector3f(192.0f, 0f, 192f));
+    spot.setDirection(new Vector3f(1, -1, 1));
+    rootNode.addLight(spot);
+    
+    SpotLightShadowRenderer slsr = new SpotLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
+    slsr.setLight(spot);
+    slsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+    slsr.setShadowIntensity(0.6f);
+    viewPort.addProcessor(slsr);
   }
 
   /** Declaring the "Shoot" action and mapping to its triggers. */
