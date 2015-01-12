@@ -142,7 +142,9 @@ public class SpotLightShadowRenderer extends AbstractShadowRenderer {
 
     @Override
     protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
-        ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCam, shadowMapOccluders);
+        ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
+        ShadowUtil.getGeometriesInCamFrustum(shadowCam, shadowMapOccluders);
+        ShadowUtil.OccludersExtractor.rootScene = null;
         return shadowMapOccluders;
     }
 
