@@ -726,10 +726,13 @@ public class RenderManager {
 
             vp.getQueue().addToQueue(gm, scene.getQueueBucket());
 
-            // add to shadow queue if needed
-            RenderQueue.ShadowMode shadowMode = scene.getShadowMode();
-            if (shadowMode != RenderQueue.ShadowMode.Off) {
-                vp.getQueue().addToShadowQueue(gm, shadowMode);
+            if (!RenderManager.optimizeRenderShadow)
+            {
+                // add to shadow queue if needed
+                RenderQueue.ShadowMode shadowMode = scene.getShadowMode();
+                if (shadowMode != RenderQueue.ShadowMode.Off) {
+                    vp.getQueue().addToShadowQueue(gm, shadowMode);
+                }
             }
         }
     }

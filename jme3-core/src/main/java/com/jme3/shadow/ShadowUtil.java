@@ -48,7 +48,6 @@ import com.jme3.scene.Spatial;
 import com.jme3.util.TempVars;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -688,13 +687,37 @@ public class ShadowUtil {
      * @param outputGeometryList the list of all geometries that are in the
      * camera frustum
      */    
-    public static void getGeometriesInCamFrustum(Camera camera, GeometryList outputGeometryList) {
+    public static void getGeometriesInCamFrustum(Camera camera, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
         if (OccludersExtractor.rootScene != null && OccludersExtractor.rootScene instanceof Node) {
             int planeState = camera.getPlaneState();
-            addGeometriesInCamFrustumFromNode(camera, (Node)OccludersExtractor.rootScene, outputGeometryList);
+            addGeometriesInCamFrustumFromNode(camera, (Node)OccludersExtractor.rootScene, mode, outputGeometryList);
             camera.setPlaneState(planeState);
         }
     }
+    
+    /**
+     * Helper function to distinguish between Occluders and Receivers
+     * 
+     * @param shadowMode the ShadowMode tested
+     * @param desired the desired ShadowMode 
+     * @return true if tested ShadowMode matches the desired one
+     */
+    static private boolean checkShadowMode(RenderQueue.ShadowMode shadowMode, RenderQueue.ShadowMode desired)
+    {
+        if (shadowMode != RenderQueue.ShadowMode.Off)
+        {
+            switch (desired) {
+                case Cast : 
+                    return shadowMode==RenderQueue.ShadowMode.Cast || shadowMode==RenderQueue.ShadowMode.CastAndReceive;
+                case Receive: 
+                    return shadowMode==RenderQueue.ShadowMode.Receive || shadowMode==RenderQueue.ShadowMode.CastAndReceive;
+                case CastAndReceive:
+                    return true;
+            }
+        }
+        return false;
+    }
+    
     /**
      * Helper function used to recursively populate the outputGeometryList 
      * with geometry children of scene node
@@ -703,16 +726,15 @@ public class ShadowUtil {
      * @param scene
      * @param outputGeometryList 
      */
-    private static void addGeometriesInCamFrustumFromNode(Camera camera, Node scene, GeometryList outputGeometryList) {
+    private static void addGeometriesInCamFrustumFromNode(Camera camera, Node scene, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
         if (scene.getCullHint() == Spatial.CullHint.Always) return;
         camera.setPlaneState(0);
         if (camera.contains(scene.getWorldBound()) != Camera.FrustumIntersect.Outside) {
             for (Spatial child: scene.getChildren()) {
-                if (child instanceof Node) addGeometriesInCamFrustumFromNode(camera, (Node)child, outputGeometryList);
+                if (child instanceof Node) addGeometriesInCamFrustumFromNode(camera, (Node)child, mode, outputGeometryList);
                 else if (child instanceof Geometry && child.getCullHint() != Spatial.CullHint.Always) {
-                    RenderQueue.ShadowMode shadowMode = child.getShadowMode();
                     camera.setPlaneState(0);
-                    if (shadowMode != RenderQueue.ShadowMode.Off && shadowMode != RenderQueue.ShadowMode.Receive && 
+                    if (checkShadowMode(child.getShadowMode(), mode) &&
                             !((Geometry)child).isGrouped() &&
                             camera.contains(child.getWorldBound()) != Camera.FrustumIntersect.Outside) {
                       outputGeometryList.add((Geometry)child);
@@ -752,4 +774,54 @@ public class ShadowUtil {
         }
 
     }
+
+    /**
+     * Populates the outputGeometryList with the geometries of the children 
+     * of OccludersExtractor.rootScene node that are both in the frustum of the given vpCamera and some camera inside cameras array.
+     * The array of cameras must be initialized to represent the light viewspace of some light like pointLight or spotLight
+     *
+     * @param camera the viewPort camera 
+     * @param cameras the camera array to check geometries against, representing the light viewspace
+     * @param outputGeometryList the output list of all geometries that are in the camera frustum
+     */
+    public static void getLitGeometriesInViewPort(Camera vpCamera, Camera[] cameras, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
+        if (OccludersExtractor.rootScene != null && OccludersExtractor.rootScene instanceof Node) {
+            addGeometriesInCamFrustumAndViewPortFromNode(vpCamera, cameras, (Node)OccludersExtractor.rootScene, mode, outputGeometryList);
+        }
+    }
+    /**
+     * Helper function to recursively collect the geometries for getLitGeometriesInViewPort function.
+     * 
+     * @param vpCamera the viewPort camera 
+     * @param cameras the camera array to check geometries against, representing the light viewspace
+     * @param scene the Node to traverse or geometry to possibly add
+     * @param outputGeometryList the output list of all geometries that are in the camera frustum
+     */
+    private static void addGeometriesInCamFrustumAndViewPortFromNode(Camera vpCamera, Camera[] cameras, Spatial scene, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
+        if (scene.getCullHint() == Spatial.CullHint.Always) return;
+
+        boolean inFrustum = false;
+        for (int j = 0; j < cameras.length && inFrustum == false; j++) {
+            Camera camera = cameras[j];
+            int planeState = camera.getPlaneState();
+            camera.setPlaneState(0);
+            inFrustum = camera.contains(scene.getWorldBound()) != Camera.FrustumIntersect.Outside && scene.checkCulling(vpCamera);
+            camera.setPlaneState(planeState);
+        }
+        if (inFrustum) {
+            if (scene instanceof Node)
+            {
+                Node node = (Node)scene;
+                for (Spatial child: node.getChildren()) {
+                    addGeometriesInCamFrustumAndViewPortFromNode(vpCamera, cameras, child, mode, outputGeometryList);
+                }
+            }
+            else if (scene instanceof Geometry) {
+                if (checkShadowMode(scene.getShadowMode(), mode) && !((Geometry)scene).isGrouped() ) {
+                    outputGeometryList.add((Geometry)scene);
+                }
+            }
+        }
+    }
+
 }

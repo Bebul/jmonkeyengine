@@ -42,7 +42,9 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.GeometryList;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Node;
 import com.jme3.util.TempVars;
 import java.io.IOException;
@@ -142,16 +144,26 @@ public class SpotLightShadowRenderer extends AbstractShadowRenderer {
 
     @Override
     protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
-        ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
-        ShadowUtil.getGeometriesInCamFrustum(shadowCam, shadowMapOccluders);
-        ShadowUtil.OccludersExtractor.rootScene = null;
+        if (RenderManager.optimizeRenderShadow) {
+            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
+            ShadowUtil.getGeometriesInCamFrustum(shadowCam, RenderQueue.ShadowMode.Cast, shadowMapOccluders);
+            ShadowUtil.OccludersExtractor.rootScene = null;
+        }
+        else ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCam, shadowMapOccluders);
         return shadowMapOccluders;
     }
 
     @Override
     GeometryList getReceivers(GeometryList sceneReceivers, GeometryList lightReceivers) {
         lightReceivers.clear();
-        ShadowUtil.getGeometriesInCamFrustum(sceneReceivers, shadowCam, lightReceivers);
+        if (RenderManager.optimizeRenderShadow) {
+            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
+            Camera[] cameras = new Camera[1];
+            cameras[0] = shadowCam;
+            ShadowUtil.getLitGeometriesInViewPort(viewPort.getCamera(), cameras, RenderQueue.ShadowMode.Receive, lightReceivers);
+            ShadowUtil.OccludersExtractor.rootScene = null;
+        }
+        else ShadowUtil.getGeometriesInCamFrustum(sceneReceivers, shadowCam, lightReceivers);
         return lightReceivers;
     }
     

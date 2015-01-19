@@ -253,11 +253,11 @@ public class RenderQueue {
                 if ( !RenderManager.optimizeRenderShadow ) shadowCast.add(g);
                 break;
             case Receive:
-                shadowRecv.add(g);
+                if ( !RenderManager.optimizeRenderShadow ) shadowRecv.add(g);
                 break;
             case CastAndReceive:
                 if ( !RenderManager.optimizeRenderShadow ) shadowCast.add(g);
-                shadowRecv.add(g);
+                if ( !RenderManager.optimizeRenderShadow ) shadowRecv.add(g);
                 break;
             default:
                 throw new UnsupportedOperationException("Unrecognized shadow bucket type: " + shadBucket);

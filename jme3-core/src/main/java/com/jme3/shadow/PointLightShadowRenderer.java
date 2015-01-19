@@ -42,6 +42,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.GeometryList;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.util.TempVars;
@@ -133,7 +134,7 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
     protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
         if (RenderManager.optimizeRenderShadow) {
             ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
-            ShadowUtil.getGeometriesInCamFrustum(shadowCams[shadowMapIndex], shadowMapOccluders);
+            ShadowUtil.getGeometriesInCamFrustum(shadowCams[shadowMapIndex], RenderQueue.ShadowMode.Cast, shadowMapOccluders);
             ShadowUtil.OccludersExtractor.rootScene = null;            
         }
         else ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCams[shadowMapIndex], shadowMapOccluders);
@@ -143,7 +144,14 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
     @Override
     GeometryList getReceivers(GeometryList sceneReceivers, GeometryList lightReceivers) {
         lightReceivers.clear();
-        ShadowUtil.getGeometriesInLightRadius(sceneReceivers, shadowCams, lightReceivers);
+        if (RenderManager.optimizeRenderShadow) {
+            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
+            //FIX: Ignore pointLight radius as shadow can be cast beyond its range. Use ShadowUtil.getGeometriesInCamFrustum instead
+            //ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, lightReceivers);
+            ShadowUtil.getLitGeometriesInViewPort(viewPort.getCamera(), shadowCams, RenderQueue.ShadowMode.Receive, lightReceivers);
+            ShadowUtil.OccludersExtractor.rootScene = null;
+        }
+        else ShadowUtil.getGeometriesInLightRadius(sceneReceivers, shadowCams, lightReceivers);
         return lightReceivers;
     }
 
@@ -220,6 +228,8 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
      */
     @Override
     protected boolean checkCulling(Camera viewCam) {      
+        //FIX: Ignore pointLight radius as shadow can be cast beyond its range.
+        //if (RenderManager.optimizeRenderShadow) return true;
         Camera cam = viewCam;
         if(frustumCam != null){
             cam = frustumCam;            
@@ -230,6 +240,5 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
         boolean intersects = light.intersectsFrustum(cam,vars);
         vars.release();
         return intersects;
-        
     }
 }
