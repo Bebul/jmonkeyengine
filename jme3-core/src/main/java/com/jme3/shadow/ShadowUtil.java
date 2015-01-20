@@ -392,7 +392,8 @@ public class ShadowUtil {
             {
                 // convert bounding box to light's viewproj space
                 Geometry occluder = (Geometry)scene;
-                if (shadowMode != RenderQueue.ShadowMode.Off && shadowMode != RenderQueue.ShadowMode.Receive && !occluder.isGrouped()) {
+                if (shadowMode != RenderQueue.ShadowMode.Off && shadowMode != RenderQueue.ShadowMode.Receive
+                        && !occluder.isGrouped() && occluder.getWorldBound()!=null) {
                     BoundingVolume bv = occluder.getWorldBound();
                     BoundingVolume occBox = bv.transform(viewProjMatrix, vars.bbox);
           
@@ -431,7 +432,7 @@ public class ShadowUtil {
                     }
                 }
             }
-            else if ( scene instanceof Node )
+            else if ( scene instanceof Node && ((Node)scene).getWorldBound()!=null )
             {
                 Node nodeOcc = (Node)scene;
                 boolean intersects = false;
