@@ -183,10 +183,10 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
         //Updating shadow cam with curent split frustra
         if (RenderManager.optimizeRenderShadow) {
             ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
-            if (lightReceivers.size()==0) {
-                ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, lightReceivers);
+            if (sceneReceivers.size()==0) {
+                ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
             }
-            ShadowUtil.updateShadowCamera(sceneOccluders, lightReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
+            ShadowUtil.updateShadowCamera(sceneOccluders, sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
             ShadowUtil.OccludersExtractor.rootScene = null;
         }
         else ShadowUtil.updateShadowCamera(sceneOccluders, sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
@@ -197,14 +197,14 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
     @Override
     GeometryList getReceivers(GeometryList sceneReceivers, GeometryList lightReceivers) {
         if (RenderManager.optimizeRenderShadow) {
-            if (lightReceivers.size()==0) {
+            if (sceneReceivers.size()==0) {
                 ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
-                ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, lightReceivers);
+                ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
                 ShadowUtil.OccludersExtractor.rootScene = null;
             }
-            return lightReceivers;
         }
-        else return sceneReceivers;
+        lightReceivers = sceneReceivers;
+        return sceneReceivers;
     }
 
     @Override
