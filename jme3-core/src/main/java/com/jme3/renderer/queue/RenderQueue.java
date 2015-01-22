@@ -50,8 +50,8 @@ public class RenderQueue {
     private GeometryList transparentList;
     private GeometryList translucentList;
     private GeometryList skyList;
-    private GeometryList shadowRecv;
-    private GeometryList shadowCast;
+    @Deprecated private GeometryList shadowRecv;
+    @Deprecated private GeometryList shadowCast;
     private Spatial rootScene = null;
 
     /**
@@ -243,6 +243,7 @@ public class RenderQueue {
      * {@link ShadowMode#CastAndReceive}, it is added to both the cast
      * and the receive buckets.
      */
+    @Deprecated
     public void addToShadowQueue(Geometry g, ShadowMode shadBucket) {
         switch (shadBucket) {
             case Inherit:
@@ -332,6 +333,7 @@ public class RenderQueue {
         renderGeometryList(list, rm, cam, clear);
     }
 
+    @Deprecated
     public void renderShadowQueue(ShadowMode shadBucket, RenderManager rm, Camera cam, boolean clear) {
         switch (shadBucket) {
             case Cast:

@@ -596,6 +596,7 @@ public class RenderManager {
      * is still rendered in the shadow frustum (shadow casting queue)
      * through this recursive method.
      */
+    @Deprecated
     private void renderShadow(Spatial s, RenderQueue rq) {
         if (s instanceof Node) {
             Node n = (Node) s;
