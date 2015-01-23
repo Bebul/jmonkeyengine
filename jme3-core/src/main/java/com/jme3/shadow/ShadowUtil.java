@@ -347,6 +347,7 @@ public class ShadowUtil {
             float shadowMapSize) {
         updateShadowCamera(occluders, receivers, shadowCam, points, null, shadowMapSize);
     }
+    
     /**
      * OccludersExtractor is a helper class to collect splitOccluders from scene recursively.
      * It utilizes the scene hierarchy, instead of making the huge flat geometries list first.
@@ -656,6 +657,26 @@ public class ShadowUtil {
     }
 
     /**
+     * Updates the shadow camera to properly contain the given points (which
+     * contain the eye camera frustum corners) and the shadow occluder objects.
+     *
+     * Render Shadow optimization to traverse the scene hierarchy instead of using the whole, but flattened, scene
+     */
+    public static void updateShadowCameraFromRoot(Spatial rootScene,
+            GeometryList receivers,
+            Camera shadowCam,
+            Vector3f[] points,
+            GeometryList splitOccluders,
+            float shadowMapSize) {
+        if ( RenderManager.optimizeRenderShadow )
+        {
+            OccludersExtractor.rootScene = rootScene;
+            ShadowUtil.updateShadowCamera(null, receivers, shadowCam, points, splitOccluders, shadowMapSize);
+            OccludersExtractor.rootScene = null;
+        }
+    }
+    
+    /**
      * Populates the outputGeometryList with the geometry of the
      * inputGeomtryList that are in the frustum of the given camera
      *
@@ -688,10 +709,10 @@ public class ShadowUtil {
      * @param outputGeometryList the list of all geometries that are in the
      * camera frustum
      */    
-    public static void getGeometriesInCamFrustum(Camera camera, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
-        if (OccludersExtractor.rootScene != null && OccludersExtractor.rootScene instanceof Node) {
+    public static void getGeometriesInCamFrustum(Spatial rootScene, Camera camera, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
+        if (rootScene != null && rootScene instanceof Node) {
             int planeState = camera.getPlaneState();
-            addGeometriesInCamFrustumFromNode(camera, (Node)OccludersExtractor.rootScene, mode, outputGeometryList);
+            addGeometriesInCamFrustumFromNode(camera, (Node)rootScene, mode, outputGeometryList);
             camera.setPlaneState(planeState);
         }
     }
@@ -785,9 +806,9 @@ public class ShadowUtil {
      * @param cameras the camera array to check geometries against, representing the light viewspace
      * @param outputGeometryList the output list of all geometries that are in the camera frustum
      */
-    public static void getLitGeometriesInViewPort(Camera vpCamera, Camera[] cameras, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
-        if (OccludersExtractor.rootScene != null && OccludersExtractor.rootScene instanceof Node) {
-            addGeometriesInCamFrustumAndViewPortFromNode(vpCamera, cameras, (Node)OccludersExtractor.rootScene, mode, outputGeometryList);
+    public static void getLitGeometriesInViewPort(Spatial rootScene, Camera vpCamera, Camera[] cameras, RenderQueue.ShadowMode mode, GeometryList outputGeometryList) {
+        if (rootScene != null && rootScene instanceof Node) {
+            addGeometriesInCamFrustumAndViewPortFromNode(vpCamera, cameras, (Node)rootScene, mode, outputGeometryList);
         }
     }
     /**

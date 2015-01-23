@@ -182,12 +182,10 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
 
         //Updating shadow cam with curent split frustra
         if (RenderManager.optimizeRenderShadow) {
-            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
             if (sceneReceivers.size()==0) {
-                ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
+                ShadowUtil.getGeometriesInCamFrustum(viewPort.getQueue().getRootScene(), viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
             }
-            ShadowUtil.updateShadowCamera(sceneOccluders, sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
-            ShadowUtil.OccludersExtractor.rootScene = null;
+            ShadowUtil.updateShadowCameraFromRoot(viewPort.getQueue().getRootScene(), sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
         }
         else ShadowUtil.updateShadowCamera(sceneOccluders, sceneReceivers, shadowCam, points, shadowMapOccluders, stabilize?shadowMapSize:0);
 
@@ -198,9 +196,7 @@ public class DirectionalLightShadowRenderer extends AbstractShadowRenderer {
     GeometryList getReceivers(GeometryList sceneReceivers, GeometryList lightReceivers) {
         if (RenderManager.optimizeRenderShadow) {
             if (sceneReceivers.size()==0) {
-                ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
-                ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
-                ShadowUtil.OccludersExtractor.rootScene = null;
+                ShadowUtil.getGeometriesInCamFrustum(viewPort.getQueue().getRootScene(), viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
             }
         }
         lightReceivers = sceneReceivers;

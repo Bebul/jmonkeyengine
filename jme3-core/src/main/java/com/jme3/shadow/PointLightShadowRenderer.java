@@ -134,9 +134,7 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
     @Override
     protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
         if (RenderManager.optimizeRenderShadow) {
-            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
-            ShadowUtil.getGeometriesInCamFrustum(shadowCams[shadowMapIndex], RenderQueue.ShadowMode.Cast, shadowMapOccluders);
-            ShadowUtil.OccludersExtractor.rootScene = null;            
+            ShadowUtil.getGeometriesInCamFrustum(viewPort.getQueue().getRootScene(), shadowCams[shadowMapIndex], RenderQueue.ShadowMode.Cast, shadowMapOccluders);
         }
         else ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCams[shadowMapIndex], shadowMapOccluders);
         return shadowMapOccluders;
@@ -150,18 +148,14 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
                 //FIX: Ignore pointLight radius as shadow can be cast beyond its range. Use ShadowUtil.getGeometriesInCamFrustum instead
                 if (sceneReceivers.size()==0)
                 {
-                    ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
-                    ShadowUtil.getGeometriesInCamFrustum(viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
-                    ShadowUtil.OccludersExtractor.rootScene = null;
+                    ShadowUtil.getGeometriesInCamFrustum(viewPort.getQueue().getRootScene(), viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
                 }
                 lightReceivers = sceneReceivers;
             }
             else {
                 if (lightReceivers==sceneReceivers) lightReceivers = new GeometryList(new OpaqueComparator()); //can be set through optimizeRenderShadow runtime switching
                 else lightReceivers.clear();
-                ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
-                ShadowUtil.getLitGeometriesInViewPort(viewPort.getCamera(), shadowCams, RenderQueue.ShadowMode.Receive, lightReceivers);
-                ShadowUtil.OccludersExtractor.rootScene = null;
+                ShadowUtil.getLitGeometriesInViewPort(viewPort.getQueue().getRootScene(), viewPort.getCamera(), shadowCams, RenderQueue.ShadowMode.Receive, lightReceivers);
             }
         }
         else {

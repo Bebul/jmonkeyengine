@@ -145,9 +145,7 @@ public class SpotLightShadowRenderer extends AbstractShadowRenderer {
     @Override
     protected GeometryList getOccludersToRender(int shadowMapIndex, GeometryList sceneOccluders, GeometryList sceneReceivers, GeometryList shadowMapOccluders) {
         if (RenderManager.optimizeRenderShadow) {
-            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene(); // pass the rootScene to updateShadowCamera without changing the public interface to stay backward compatible 
-            ShadowUtil.getGeometriesInCamFrustum(shadowCam, RenderQueue.ShadowMode.Cast, shadowMapOccluders);
-            ShadowUtil.OccludersExtractor.rootScene = null;
+            ShadowUtil.getGeometriesInCamFrustum(viewPort.getQueue().getRootScene(), shadowCam, RenderQueue.ShadowMode.Cast, shadowMapOccluders);
         }
         else ShadowUtil.getGeometriesInCamFrustum(sceneOccluders, shadowCam, shadowMapOccluders);
         return shadowMapOccluders;
@@ -157,11 +155,9 @@ public class SpotLightShadowRenderer extends AbstractShadowRenderer {
     GeometryList getReceivers(GeometryList sceneReceivers, GeometryList lightReceivers) {
         lightReceivers.clear();
         if (RenderManager.optimizeRenderShadow) {
-            ShadowUtil.OccludersExtractor.rootScene = viewPort.getQueue().getRootScene();
             Camera[] cameras = new Camera[1];
             cameras[0] = shadowCam;
-            ShadowUtil.getLitGeometriesInViewPort(viewPort.getCamera(), cameras, RenderQueue.ShadowMode.Receive, lightReceivers);
-            ShadowUtil.OccludersExtractor.rootScene = null;
+            ShadowUtil.getLitGeometriesInViewPort(viewPort.getQueue().getRootScene(), viewPort.getCamera(), cameras, RenderQueue.ShadowMode.Receive, lightReceivers);
         }
         else ShadowUtil.getGeometriesInCamFrustum(sceneReceivers, shadowCam, lightReceivers);
         return lightReceivers;
