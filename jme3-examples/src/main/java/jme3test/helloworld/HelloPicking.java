@@ -46,6 +46,7 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.light.DirectionalLight;
+import com.jme3.light.PointLight;
 import com.jme3.light.SpotLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
@@ -55,6 +56,7 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Ray;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.queue.RenderQueue.ShadowMode;
 import com.jme3.scene.Geometry;
@@ -62,9 +64,13 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
-import com.jme3.shadow.CompareMode;
+import com.jme3.shadow.AbstractShadowRenderer;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.shadow.EdgeFilteringMode;
+import com.jme3.shadow.PointLightShadowFilter;
+import com.jme3.shadow.PointLightShadowRenderer;
+import com.jme3.shadow.SpotLightShadowFilter;
 import com.jme3.shadow.SpotLightShadowRenderer;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture.WrapMode;
@@ -140,7 +146,7 @@ public class HelloPicking extends SimpleApplication {
       }
       public void onAnimChange(AnimControl control, AnimChannel channel, String animName) {
         // unused
-      }      
+      }
     });
     channel = control.createChannel();
     channel.setAnim("Walk");    
@@ -149,7 +155,7 @@ public class HelloPicking extends SimpleApplication {
     
     // We must add a light to make the model visible
     DirectionalLight sun = new DirectionalLight();
-    sun.setDirection(new Vector3f(-1f, -1f, -1f));
+    sun.setDirection(new Vector3f(-1f, -1f, 1f));
     sun.setColor(ColorRGBA.White.mult(1.3f));
     rootNode.addLight(sun);
     
@@ -157,16 +163,16 @@ public class HelloPicking extends SimpleApplication {
     sky.setLocalScale(350);
 
     rootNode.attachChild(sky);
+
+    SpotLight spot = new SpotLight();
+    spot.setSpotRange(13f);                           // distance
+    spot.setSpotInnerAngle(15f * FastMath.DEG_TO_RAD); // inner light cone (central beam)
+    spot.setSpotOuterAngle(20f * FastMath.DEG_TO_RAD); // outer light cone (edge of the light)
+    spot.setColor(ColorRGBA.White.mult(1.3f));         // light color
+    spot.setPosition(new Vector3f(192.0f, -1f, 192f));
+    spot.setDirection(new Vector3f(1, -0.5f, 1));
+    rootNode.addLight(spot);
     
-    dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 3);
-    dlsr.setLight(sun);
-    dlsr.setLambda(0.55f);
-    dlsr.setShadowIntensity(0.6f);
-    dlsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
-    //dlsr.displayDebug();
-    //viewPort.addProcessor(dlsr);
-  
- /*
     PointLight lamp_light = new PointLight();
     lamp_light.setColor(ColorRGBA.Yellow);
     lamp_light.setRadius(20f);
@@ -174,26 +180,73 @@ public class HelloPicking extends SimpleApplication {
     //lamp_light.setPosition(new Vector3f(10.0f, 40f, 10f));
     rootNode.addLight(lamp_light);
     
-    PointLightShadowRenderer plsr = new PointLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
-    plsr.setLight(lamp_light);
-    plsr.setShadowIntensity(0.6f);
-    plsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
-    viewPort.addProcessor(plsr);
-*/
-    SpotLight spot = new SpotLight();
-    spot.setSpotRange(200f);                           // distance
-    spot.setSpotInnerAngle(15f * FastMath.DEG_TO_RAD); // inner light cone (central beam)
-    spot.setSpotOuterAngle(35f * FastMath.DEG_TO_RAD); // outer light cone (edge of the light)
-    spot.setColor(ColorRGBA.White.mult(1.3f));         // light color
-    spot.setPosition(new Vector3f(192.0f, 0f, 192f));
-    spot.setDirection(new Vector3f(1, -1, 1));
-    rootNode.addLight(spot);
+    boolean useShadowFilters = false;
+    AbstractShadowRenderer lastSR = null;
     
-    SpotLightShadowRenderer slsr = new SpotLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
-    slsr.setLight(spot);
-    slsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
-    slsr.setShadowIntensity(0.6f);
-    viewPort.addProcessor(slsr);
+    if (!useShadowFilters) {
+        if (true) {
+            dlsr = new DirectionalLightShadowRenderer(assetManager, SHADOWMAP_SIZE, 3);
+            dlsr.setLight(sun);
+            dlsr.setLambda(0.55f);
+            dlsr.setShadowIntensity(0.5f);
+            dlsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+            dlsr.setFlushQueues(false);
+            //dlsr.displayDebug();
+            viewPort.addProcessor(dlsr);
+            lastSR = dlsr;
+        }
+
+        if (true) {
+            SpotLightShadowRenderer slsr = new SpotLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
+            slsr.setLight(spot);
+            slsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+            slsr.setShadowIntensity(0.6f);
+            slsr.setFlushQueues(false);
+            viewPort.addProcessor(slsr);
+            lastSR = slsr;
+        }
+
+        if (true) {
+            PointLightShadowRenderer plsr = new PointLightShadowRenderer(assetManager, SHADOWMAP_SIZE);
+            plsr.setLight(lamp_light);
+            plsr.setShadowIntensity(0.6f);
+            plsr.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+            plsr.setFlushQueues(false);
+            viewPort.addProcessor(plsr);
+            lastSR = plsr;
+        }
+
+        if (lastSR!=null) lastSR.setFlushQueues(true);
+    }
+    else
+    {
+        FilterPostProcessor fpp = new FilterPostProcessor(assetManager);
+
+        DirectionalLightShadowFilter dlsf = new DirectionalLightShadowFilter(assetManager, SHADOWMAP_SIZE, 3);
+        dlsf.setLight(sun);
+        dlsf.setEnabled(true);
+        dlsf.setFlushQueues(false);
+        fpp.addFilter(dlsf);
+
+        SpotLightShadowFilter slsf = new SpotLightShadowFilter(assetManager, SHADOWMAP_SIZE);
+        slsf.setLight(spot);
+        slsf.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+        slsf.setEnabled(true);
+        slsf.setShadowIntensity(0.6f);
+        slsf.setFlushQueues(false);
+        fpp.addFilter(slsf);
+
+        PointLightShadowFilter plsf = new PointLightShadowFilter(assetManager, SHADOWMAP_SIZE);
+        plsf.setLight(lamp_light);
+        plsf.setEdgeFilteringMode(EdgeFilteringMode.Nearest);
+        plsf.setEnabled(true);
+        plsf.setShadowIntensity(0.6f);
+        plsf.setFlushQueues(true);
+        fpp.addFilter(plsf);
+        
+        viewPort.addProcessor(fpp);
+    }
+
   }
 
   /** Declaring the "Shoot" action and mapping to its triggers. */
