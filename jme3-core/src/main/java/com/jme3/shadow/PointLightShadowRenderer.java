@@ -143,20 +143,9 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
     @Override
     GeometryList getReceivers(GeometryList sceneReceivers, GeometryList lightReceivers) {
         if (RenderManager.optimizeRenderShadow) {
-            if (hotfixShadows)
-            {
-                //FIX: Ignore pointLight radius as shadow can be cast beyond its range. Use ShadowUtil.getGeometriesInCamFrustum instead
-                if (sceneReceivers.size()==0)
-                {
-                    ShadowUtil.getGeometriesInCamFrustum(viewPort.getQueue().getRootScene(), viewPort.getCamera(), RenderQueue.ShadowMode.Receive, sceneReceivers);
-                }
-                lightReceivers = sceneReceivers;
-            }
-            else {
-                if (lightReceivers==sceneReceivers) lightReceivers = new GeometryList(new OpaqueComparator()); //can be set through optimizeRenderShadow runtime switching
-                else lightReceivers.clear();
-                ShadowUtil.getLitGeometriesInViewPort(viewPort.getQueue().getRootScene(), viewPort.getCamera(), shadowCams, RenderQueue.ShadowMode.Receive, lightReceivers);
-            }
+            if (lightReceivers==sceneReceivers) lightReceivers = new GeometryList(new OpaqueComparator()); //can be set through optimizeRenderShadow runtime switching
+            else lightReceivers.clear();
+            ShadowUtil.getLitGeometriesInViewPort(viewPort.getQueue().getRootScene(), viewPort.getCamera(), shadowCams, RenderQueue.ShadowMode.Receive, lightReceivers);
         }
         else {
             if (lightReceivers==sceneReceivers) lightReceivers = new GeometryList(new OpaqueComparator()); //can be set through optimizeRenderShadow runtime switching
@@ -232,7 +221,6 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
         oc.write(light, "light", null);
     }
     
-   private static boolean hotfixShadows = false;
     /**
      *
      * @param viewCam
@@ -240,9 +228,6 @@ public class PointLightShadowRenderer extends AbstractShadowRenderer {
      */
     @Override
     protected boolean checkCulling(Camera viewCam) {      
-        //FIX: Ignore pointLight radius as shadow can be cast beyond its range.
-        if (RenderManager.optimizeRenderShadow && hotfixShadows) 
-            return true;
         Camera cam = viewCam;
         if(frustumCam != null){
             cam = frustumCam;            
