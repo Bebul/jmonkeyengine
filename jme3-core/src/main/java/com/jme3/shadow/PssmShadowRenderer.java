@@ -175,6 +175,8 @@ public class PssmShadowRenderer implements SceneProcessor {
     protected float fadeLength;
     protected boolean applyFadeInfo = false;
 
+    protected GeometryList lightReceivers = new GeometryList(new OpaqueComparator());
+    
     /**
      * Create a PSSM Shadow Renderer More info on the technique at <a
      * href="http://http.developer.nvidia.com/GPUGems3/gpugems3_ch10.html">http://http.developer.nvidia.com/GPUGems3/gpugems3_ch10.html</a>
@@ -385,14 +387,22 @@ public class PssmShadowRenderer implements SceneProcessor {
 
     @SuppressWarnings("fallthrough")
     public void postQueue(RenderQueue rq) {
-        GeometryList occluders = rq.getShadowQueueContent(ShadowMode.Cast);
-        if (occluders.size() == 0) {
-            return;
+        GeometryList receivers = null;
+        GeometryList occluders = null;
+        if (RenderManager.optimizeRenderShadow)
+        {
+            ShadowUtil.getGeometriesInCamFrustum(rq.getRootScene(), viewPort.getCamera(), ShadowMode.CastAndReceive, lightReceivers);
         }
+        else {
+            occluders = rq.getShadowQueueContent(ShadowMode.Cast);
+            if (occluders.size() == 0) {
+                return;
+            }
 
-        GeometryList receivers = rq.getShadowQueueContent(ShadowMode.Receive);
-        if (receivers.size() == 0) {
-            return;
+            receivers = rq.getShadowQueueContent(ShadowMode.Receive);
+            if (receivers.size() == 0) {
+                return;
+        }
         }
 
         Camera viewCam = viewPort.getCamera();
@@ -437,7 +447,12 @@ public class PssmShadowRenderer implements SceneProcessor {
             ShadowUtil.updateFrustumPoints(viewCam, splitsArray[i], splitsArray[i + 1], 1.0f, points);
 
             //Updating shadow cam with curent split frustra
-            ShadowUtil.updateShadowCamera(occluders, receivers, shadowCam, points, splitOccluders, shadowMapSize);
+            if (RenderManager.optimizeRenderShadow) {
+                ShadowUtil.OccludersExtractor.rootScene = rq.getRootScene();
+                ShadowUtil.updateShadowCamera(null, lightReceivers, shadowCam, points, splitOccluders, shadowMapSize);
+                ShadowUtil.OccludersExtractor.rootScene = null;
+            }
+            else ShadowUtil.updateShadowCamera(occluders, receivers, shadowCam, points, splitOccluders, shadowMapSize);
 
             //saving light view projection matrix for this split            
             lightViewProjectionsMatrices[i].set(shadowCam.getViewProjectionMatrix());
@@ -460,8 +475,10 @@ public class PssmShadowRenderer implements SceneProcessor {
             viewPort.getQueue().renderShadowQueue(splitOccluders, renderManager, shadowCam, true);
         }
         debugfrustums = false;
-        if (flushQueues) {
-            occluders.clear();
+        if (!RenderManager.optimizeRenderShadow) {
+            if (flushQueues) {
+                occluders.clear();
+            }
         }
         //restore setting for future rendering
         r.setFrameBuffer(viewPort.getOutputFrameBuffer());
@@ -518,7 +535,10 @@ public class PssmShadowRenderer implements SceneProcessor {
             renderManager.setForcedTechnique(postTechniqueName);
 
             //rendering the post shadow pass
-            viewPort.getQueue().renderShadowQueue(ShadowMode.Receive, renderManager, cam, flushQueues);
+            if (RenderManager.optimizeRenderShadow) {
+                viewPort.getQueue().renderShadowQueue(lightReceivers, renderManager, cam, true);
+            }
+            else viewPort.getQueue().renderShadowQueue(ShadowMode.Receive, renderManager, cam, flushQueues);
 
             //resetting renderManager settings
             renderManager.setForcedTechnique(null);
@@ -531,7 +551,9 @@ public class PssmShadowRenderer implements SceneProcessor {
 
     private void setMatParams() {
 
-        GeometryList l = viewPort.getQueue().getShadowQueueContent(ShadowMode.Receive);
+        GeometryList l;
+        if (renderManager.optimizeRenderShadow) l = lightReceivers;
+        else l = viewPort.getQueue().getShadowQueueContent(ShadowMode.Receive);
 
         //iteration throught all the geometries of the list to gather the materials
 
