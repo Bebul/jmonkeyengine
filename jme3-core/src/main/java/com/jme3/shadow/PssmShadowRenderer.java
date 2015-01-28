@@ -448,9 +448,9 @@ public class PssmShadowRenderer implements SceneProcessor {
 
             //Updating shadow cam with curent split frustra
             if (RenderManager.optimizeRenderShadow) {
-                ShadowUtil.OccludersExtractor.rootScene = rq.getRootScene();
+                ShadowUtil.rootScene = rq.getRootScene();
                 ShadowUtil.updateShadowCamera(null, lightReceivers, shadowCam, points, splitOccluders, shadowMapSize);
-                ShadowUtil.OccludersExtractor.rootScene = null;
+                ShadowUtil.rootScene = null;
             }
             else ShadowUtil.updateShadowCamera(occluders, receivers, shadowCam, points, splitOccluders, shadowMapSize);
 

@@ -355,18 +355,20 @@ public class ShadowUtil {
      * all of them one by one against camera frustum the whole Node is checked first
      * to hopefully avoid the check on its children.
      */
-    static class OccludersExtractor
+    static public Spatial rootScene = null;
+    public static class OccludersExtractor
     {
         // global variables set in order not to have recursive addOccluders method with too many parameters
-        static Matrix4f viewProjMatrix;
-        static public Integer casterCount;
-        static public Spatial rootScene = null;
-        static BoundingBox splitBB, casterBB;
-        static GeometryList splitOccluders;
-        static TempVars vars;
+        Matrix4f viewProjMatrix;
+        public Integer casterCount;
+        BoundingBox splitBB, casterBB;
+        GeometryList splitOccluders;
+        TempVars vars;
+        
+        public OccludersExtractor() {}
         
         // initialize the global OccludersExtractor variables
-        static void init(Matrix4f vpm, int cc, BoundingBox sBB, BoundingBox cBB, GeometryList sOCC, TempVars v) {
+        public OccludersExtractor(Matrix4f vpm, int cc, BoundingBox sBB, BoundingBox cBB, GeometryList sOCC, TempVars v) {
             viewProjMatrix = vpm; 
             casterCount = cc;
             splitBB = sBB;
@@ -381,11 +383,12 @@ public class ShadowUtil {
          * The {@link OccludersExtractor#rootScene} need to be set before the call to {@link ShadowUtil#updateShadowCamera}
          * Variables are updated and used in {@link ShadowUtil#updateShadowCamera} at last.
          */
-        static void addOccluders() {
+        public int addOccluders() {
             if ( rootScene != null ) addOccluders(rootScene);
+            return casterCount;
         }
         
-        static private void addOccluders(Spatial scene) {
+        private void addOccluders(Spatial scene) {
             if (scene.getCullHint() == Spatial.CullHint.Always) return;
 
             RenderQueue.ShadowMode shadowMode = scene.getShadowMode();
@@ -517,9 +520,8 @@ public class ShadowUtil {
         if ( RenderManager.optimizeRenderShadow )
         {
           // collect splitOccluders through scene recursive traverse
-          OccludersExtractor.init(viewProjMatrix, casterCount, splitBB, casterBB, splitOccluders, vars);
-          OccludersExtractor.addOccluders(); // the rootScene inside
-          casterCount = OccludersExtractor.casterCount;
+          OccludersExtractor occExt = new OccludersExtractor(viewProjMatrix, casterCount, splitBB, casterBB, splitOccluders, vars);
+          casterCount = occExt.addOccluders(); // the rootScene inside
         }
         else
         {
@@ -670,9 +672,9 @@ public class ShadowUtil {
             float shadowMapSize) {
         if ( RenderManager.optimizeRenderShadow )
         {
-            OccludersExtractor.rootScene = rootScene;
+            ShadowUtil.rootScene = rootScene;
             ShadowUtil.updateShadowCamera(null, receivers, shadowCam, points, splitOccluders, shadowMapSize);
-            OccludersExtractor.rootScene = null;
+            ShadowUtil.rootScene = null;
         }
     }
     

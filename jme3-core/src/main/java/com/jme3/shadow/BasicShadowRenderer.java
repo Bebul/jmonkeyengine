@@ -193,10 +193,10 @@ public class BasicShadowRenderer implements SceneProcessor {
         // render shadow casters to shadow map
         if (RenderManager.optimizeRenderShadow)
         {
-            ShadowUtil.OccludersExtractor.rootScene = rq.getRootScene();
+            ShadowUtil.rootScene = rq.getRootScene();
             occluders = new GeometryList(new OpaqueComparator());
             ShadowUtil.updateShadowCamera(null, lightReceivers, shadowCam, points, shadowOccluders, shadowMapSize);
-            ShadowUtil.OccludersExtractor.rootScene = null;
+            ShadowUtil.rootScene = null;
             if (shadowOccluders.size() == 0) {
                 noOccluders = true;
                 return;
