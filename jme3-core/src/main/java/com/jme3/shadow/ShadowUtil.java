@@ -355,7 +355,7 @@ public class ShadowUtil {
      * all of them one by one against camera frustum the whole Node is checked first
      * to hopefully avoid the check on its children.
      */
-    static public Spatial rootScene = null;
+    static public Spatial rootScene = null; // static global used for OccludersExtractor in order not to change public ShadoUtil.updateShadowCamera interface
     public static class OccludersExtractor
     {
         // global variables set in order not to have recursive addOccluders method with too many parameters

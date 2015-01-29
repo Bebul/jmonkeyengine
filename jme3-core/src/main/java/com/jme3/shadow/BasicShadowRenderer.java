@@ -150,7 +150,7 @@ public class BasicShadowRenderer implements SceneProcessor {
         GeometryList occluders = null;
         if (RenderManager.optimizeRenderShadow)
         {
-            ShadowUtil.getGeometriesInCamFrustum(rq.getRootScene(), viewPort.getCamera(), ShadowMode.CastAndReceive, lightReceivers);
+            ShadowUtil.getGeometriesInCamFrustum(rq.getRootScene(), viewPort.getCamera(), ShadowMode.Receive, lightReceivers);
         }
         else {
             occluders = rq.getShadowQueueContent(ShadowMode.Cast);
